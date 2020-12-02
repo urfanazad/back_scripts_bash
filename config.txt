@@ -1,0 +1,96 @@
+OBJECTIVE 1
+en
+conf t
+hostname LAB-ROUTER-1
+int g0/0 
+ip address 213.48.17.252 255.255.255.254
+no shut
+ip route 8.8.8.8 255.255.255.255 213.48.17.252
+
+show ip route
+#######
+OBJECTIVE 2
+en
+conf t
+hostname LAB-ROUTER-2
+int g0/0 
+ip add 192.168.0.1 255.255.255.252
+no shut
+ip default-gateway 192.168.0.2 
+Router 1
+int g0/1
+ip add 192.168.0.2 255.255.255.252
+no shut
+Static route for all route?
+
+Objective 3 - router 2
+conf t
+int g0/1/0
+ip add 10.0.0.1 255.255.255.252
+swithport mode access
+switchaccess access vlan 10
+conf t
+int g0/1/1
+ip add 10.0.1.1 255.255.255.252
+swithport mode access
+switchaccess access vlan 20
+conf t
+int g0/1/2
+ip add 10.0.2.1 255.255.255.252
+swithport mode access
+switchaccess access vlan 30
+-verify show vlan
+
+Establish BGP router 2
+router bgp 65010
+neighbour 10.0.0.2 remote-as 65000
+neighbour 10.0.1.2 remote-as 65001
+neighbour 10.0.2.2 remote-as 65002
+
+Objective 4 - Routers 2 & 3
+conf t
+hostname LAB-ROUTER-3
+router 3
+int g0/0/0
+ip add 192.168.0.6 255.255.255.252
+no shut
+int g0/0/1 
+ip add 192.168.0.5 255.255.255.252
+no shut
+do sh int br
+#OSPF on Router 2 and 3
+router3 
+conf t
+router ospf 1
+network 192.168.0.6 0.0.0.252 area 0
+show protocols
+router2
+conf t
+router ospf 1
+network 192.168.0.5 255.255.255.252 area 0
+show protocols
+#redistribution?
+
+
+Objective 5
+router 3
+conf t
+int lo0
+ip add 10.10.10.10 255.255.255.255
+ip route 192.168.0.2 255.255.255.252 10.10.10.10
+ROUTER 1 NAT
+conf t
+int g0/0  <---outside interface internet facing
+ip nat outside
+int g0/1  <---inside interface Lan facing
+ip nat inside
+exit
+### need to configure a ACL to allow what subnet will be nat'ed###
+config#ip access-list standard (use for name) NAT_THESE ADDRESS_NOW
+config-std-nacl#permit 10.0.0.0 0.0.0.255
+(use question marks)
+exit
+config#ip nat inside source list NAT_THESE ADDRESS_NOW interface g0/0 overload (if you forget overload it only owrks for one person)
+
+OBJECTIVE 6
+
